@@ -1,0 +1,93 @@
+qingming-z-image-turbo
+Copyright 2026 qingming-z-image-turbo contributors
+
+This product is an unofficial native HIP/C++ implementation for running
+Z-Image-Turbo on AMD Radeon RX 7900 XTX / gfx1100 hardware.
+
+PROJECT WORK
+------------
+
+Original work in this project includes, as applicable:
+
+- Native C++/HIP inference orchestration
+- gfx1100 BF16 WMMA kernels
+- Persistent GEMM scheduling
+- Fused QKV, attention, and FFN execution paths
+- GPU-resident static execution graphs
+- Resolution-specific DiT and VAE execution
+- Q8_0, Q6_K, and Q5_K_M GGUF execution paths
+- Build, download, benchmarking, and documentation utilities
+
+The original source code and documentation of qingming-z-image-turbo,
+excluding third-party materials, are licensed under the Apache License,
+Version 2.0.
+
+A copy of the license is available at:
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+UPSTREAM ATTRIBUTION
+--------------------
+
+This project builds upon and interoperates with Z-Image and Z-Image-Turbo,
+published by Tongyi-MAI.
+
+Official project:
+    https://github.com/Tongyi-MAI/Z-Image
+
+Official model:
+    https://huggingface.co/Tongyi-MAI/Z-Image-Turbo
+    https://www.modelscope.cn/models/Tongyi-MAI/Z-Image-Turbo
+
+Official paper:
+    https://arxiv.org/abs/2511.22699
+
+Z-Image and Z-Image-Turbo are works of their respective authors and
+contributors. Their official source repository and official model page
+identify the applicable license as Apache License 2.0.
+
+This project does not claim ownership of the Z-Image or Z-Image-Turbo
+names, paper, model weights, training data, source materials, or trademarks.
+
+THIRD-PARTY MATERIALS
+---------------------
+
+Model weights downloaded by project scripts are not part of the original
+qingming-z-image-turbo source code.
+
+GGUF files, quantized weights, ROCm/HIP components, FFmpeg, and any other
+third-party software or assets remain subject to the licenses, notices, and
+terms supplied by their respective authors, distributors, and rights holders.
+
+Redistributors must preserve all applicable copyright, patent, trademark,
+license, and attribution notices, and must clearly mark modified upstream
+files when required by the applicable license.
+
+TRADEMARKS AND AFFILIATION
+--------------------------
+
+This project is not affiliated with, sponsored by, or endorsed by
+Tongyi-MAI, Alibaba Group, AMD, FFmpeg, or their affiliates.
+
+All product names, project names, trademarks, and registered trademarks are
+the property of their respective owners. Their use in this project is solely
+for identification and description of compatibility or origin.
+
+NO WARRANTY
+-----------
+
+Unless required by applicable law or agreed to in writing, this software and
+its accompanying materials are provided on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+中文说明
+--------
+
+qingming-z-image-turbo 是面向 AMD Radeon RX 7900 XTX / gfx1100 的非官方
+原生 HIP/C++ 推理实现。本项目与 Tongyi-MAI、Alibaba Group、AMD、FFmpeg
+及其关联方不存在隶属、赞助或官方合作关系。
+
+本项目原创代码和文档依据 Apache License 2.0 发布。Z-Image、Z-Image-Turbo、
+模型权重、GGUF 量化文件以及其他第三方组件仍归其各自权利人所有，并受其来源
+仓库和适用许可证约束。再分发时必须保留适用的版权、许可证、商标和归属声明，
+并按许可证要求明确标记对上游文件所作的修改。

@@ -1,0 +1,29 @@
+# Models
+models/
+*.gguf
+*.safetensors
+*.bin
+
+# Generated images and artifacts
+outputs/*
+!outputs/*.jpg
+!outputs/README.md
+*_artifacts/
+*.ppm
+*.log
+
+# Compiled binaries
+zimage_bf16
+zimage_q8
+zimage_q6k
+zimage_q5km
+*.o
+*.so
+*.a
+build/
+
+# Editor and system
+.vscode/
+.idea/
+.DS_Store
+*~
