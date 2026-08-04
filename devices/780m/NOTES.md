@@ -1,74 +1,94 @@
 # devices/780m — AMD Radeon 780M (gfx1103 APU) phased-memory variant
 
-Goal: cut peak GPU memory by freeing the Qwen text-encoder weights after the
-context tensor is computed, before the DiT phase begins. Peak drops from
-~29 GB (Qwen 7.6 + DiT 5.2 + workspace ~16) to ~21 GB; observed DiT-phase GTT
-~8.3 GB vs ~16 GB for the original.
+Goal: cut GPU memory by freeing the Qwen text-encoder weights after the context
+tensor is computed, before the DiT phase begins. On the iGPU this turns the
+long DiT phase from ~16 GB sustained into ~8-9 GB sustained.
 
-## Status: working (graph split)
+## Status: working and bit-exact at all three sizes
+
+The graph-split is validated end-to-end. Same prompt/seed, phased
+`zimage_q5km_780m` vs original `zimage_q5km`, on gfx1103 via
+`HSA_OVERRIDE_GFX_VERSION=11.0.0`, GNOME stopped (TTY):
+
+| size      | build   | exit | wall time | sustained DiT GTT | SHA-256                          |
+| ----------| --------| ---- | --------- | ----------------- | -------------------------------- |
+| 512x512   | original| 0    |  58.6 s   | ~16 GB            | `d196425d…0242013`               |
+| 512x512   | phased  | 0    |  **51.5 s** | **~8.3 GB**     | `d196425d…0242013` ✅ identical |
+| 576x1024  | original| 0    | 126.8 s   | ~16 GB            | `0f88ae34…88e5b`                 |
+| 576x1024  | phased  | 0    | **121.9 s** | **~8.5 GB**     | `0f88ae34…88e5b`   ✅ identical |
+| 1024x1024 | original| 0    | 257.4 s   | ~16 GB            | `f870fd22…4fea7`                 |
+| 1024x1024 | phased  | 0    | **247.2 s** | **~8.8 GB**     | `f870fd22…4fea7`   ✅ identical |
+
+Zero `[gfxhub] page fault`, zero `GPU reset begin` across all six runs
+(no use-after-free of the freed Qwen arena).
+
+### Speed
+Phased is faster at every size because lower sustained memory pressure means
+fewer amdgpu `init_user_pages` pin retries:
+- 512x512:   51.5 s vs 58.6 s  → **-12.1%**
+- 576x1024: 121.9 s vs 126.8 s → **-3.9%**
+- 1024x1024: 247.2 s vs 257.4 s → **-4.0%**
+
+### Memory
+- Sustained DiT-phase GTT is roughly halved (~16 GB → ~8-9 GB) — the win that
+  matters, since DiT is the long phase.
+- Transient peak at the phase-1→2 boundary (~16.4 GB at 1024x1024) momentarily
+  matches the original's sustained level, but only for an instant; e.g. the
+  1024x1024 signature:
+  ```
+  t=8s   7831 MiB   Qwen weights loaded
+  t=16s 16447 MiB   phase-transition transient (Qwen + DiT + phase-2 workspace)
+  t=24s+  8774 MiB   Qwen freed -> DiT steady-state for the ~4 min run
+  ```
+
+## How it works
 
 A first attempt inserted a `hipStreamSynchronize` + `encoder_weights.free_early()`
 right after `q22_enqueue_context_refiner`. That failed with
-`hipErrorStreamCaptureUnsupported (900)` because the whole pipeline is captured
-into ONE hip graph by `Q261CaptureGuard` (constructor calls
-`hipStreamBeginCapture`, `finish()` calls `hipStreamEndCapture`). A mid-capture
-sync is illegal.
+`hipErrorStreamCaptureUnsupported (900)`: the whole pipeline is captured into
+ONE hip graph by `Q261CaptureGuard` (constructor calls `hipStreamBeginCapture`,
+`finish()` calls `hipStreamEndCapture`), so a mid-capture sync is illegal.
 
 The working approach splits the single captured graph into two, per `q22_run`
-body (512x512 validated bit-exact; 576x1024 / 1024x1024 implemented + compile
-clean, not yet runtime-tested):
+body (applied to all three sizes):
 
 1. **Phase-1 capture (Qwen, BF16):** a nested `Q261CaptureGuard qwen_capture_guard`
-   records `qwen_enqueue_qwen_prompt`, `q22_enqueue_prompt_projection`,
+   records `q22_enqueue_qwen_prompt`, `q22_enqueue_prompt_projection`,
    `q22_enqueue_context_refiner` (and their profiling events); `finish(qwen_graph)`;
    `hipGraphInstantiate` + `hipGraphUpload` + `hipGraphLaunch` + `hipStreamSynchronize`.
 2. `encoder_weights.free_early()` — reclaims ~7.6 GB. The context output lives in
    its own `DeviceBuffer` (`context_workspace`, `prompt_projection.projected`) and
-   persists across the launch boundary.
+   persists across the launch boundary, so the DiT reads byte-identical context.
 3. **Phase-2 capture (DiT + VAE):** the original `Q261CaptureGuard capture_guard`
    now starts here, immediately followed by `zq8_begin_async_pipeline_capture()`
-   (the async quant-decode machinery stays with the DiT phase), the patchify + DiT
-   step loop, VAE, `zq8_finalize_static_pipeline_capture()`, `finish(graph)`,
+   (the async quant-decode machinery stays with the DiT phase), the patchify +
+   DiT step loop, VAE, `zq8_finalize_static_pipeline_capture()`, `finish(graph)`,
    `q20_staticize_quant_decode_graph`, instantiate/upload/launch/sync — unchanged.
 
 ### Supporting change
 `zimage_qwen::DeviceWeightArena` gained a `free_early()` method
-(`hipFree(base_); base_ = nullptr; bytes_ = 0;`). The destructor's
-`if (base_)` guard makes this double-free safe. The sampler/vae arenas are
-untouched.
+(`hipFree(base_); base_ = nullptr; bytes_ = 0;`). The destructor's `if (base_)`
+guard makes this double-free safe. The sampler/vae arenas are untouched.
 
-## Validation (512x512, gfx1103 via HSA_OVERRIDE, TTY)
+## Caveats
 
-Same prompt/seed, phased vs original `zimage_q5km`:
-```
-d196425d5e47145f074f3a3cf160fccfa8eea2c99b47728bfa97ba2530242013  phased   51,526 ms
-d196425d5e47145f074f3a3cf160fccfa8eea2c99b47728bfa97ba2530242013  original 58,624 ms
-```
-Bit-identical PPM, zero gfxhub page faults (no use-after-free), zero GPU resets.
-Phased is ~12% faster (less memory pressure -> fewer amdgpu pin retries).
+- `gpu_milliseconds` / "Full graph wall time" wraps only the phase-2 (DiT)
+  launch; phase-1 (Qwen, ~3 s) is not included in that metric. Cosmetic — the
+  table above was timed externally.
+- Mode-1 (one-shot) only. `q22_run` is currently called only from mode-1
+  `call_single` (3 call sites). Do NOT call `q22_run` from mode-2 (resident
+  interactive) without reloading the Qwen arena — `encoder_weights` is freed at
+  the end of phase 1 and the resident is reused across prompts in mode 2.
+- Build target is gfx1100; run with `HSA_OVERRIDE_GFX_VERSION=11.0.0`.
+- GNOME must be stopped on the APU — its memory pressure causes amdgpu
+  `init_user_pages: -1` floods and GPU resets. Drop to TTY first.
 
-## Known caveats
-
-- `gpu_milliseconds` / "Full graph wall time" still wraps only the phase-2
-  (DiT) launch; phase-1 (Qwen, ~3 s) is not included in that metric. Cosmetic.
-- The phased free is safe for mode-1 (one-shot) only. `q22_run` is currently
-  called only from mode-1 `call_single` (3 call sites); do NOT call `q22_run`
-  from mode-2 (resident interactive) without reloading the Qwen arena, since
-  `encoder_weights` is freed at the end of phase 1 and the resident is reused
-  across prompts in mode 2.
-- Build target is still gfx1100; run with `HSA_OVERRIDE_GFX_VERSION=11.0.0`.
-- 576x1024 / 1024x1024 splits are compile-verified only — run-test before
-  relying on them.
-
-## Run (512x512, TTY)
-
-GNOME must be stopped (its memory pressure causes amdgpu `init_user_pages: -1`
-floods and GPU resets):
+## Run
 
 ```bash
-sudo systemctl isolate multi-user.target
+sudo systemctl isolate multi-user.target        # stop GNOME
 export HSA_OVERRIDE_GFX_VERSION=11.0.0
-./zimage_q5km_780m 1 --size 512x512 \
+./zimage_q5km_780m 1 --size 512x512 \           # or 576x1024 / 1024x1024
   --model-dir models/z_image_turbo_ms \
   --dit-gguf /dev/shm/<gguf staged on tmpfs> \
   --prompt "..." --seed 42 --max-steps 8 --output out.ppm
