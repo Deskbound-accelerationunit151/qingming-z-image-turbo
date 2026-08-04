@@ -28,15 +28,15 @@ The graph-split is validated end-to-end. Same prompt/seed, phased
 Zero `[gfxhub] page fault`, zero `GPU reset begin` across all six runs
 (no use-after-free of the freed Qwen arena).
 
-### Q8_0 (zimage_q8_780m) — 512x512 spot-check
+### Q8_0 (zimage_q8_780m) — spot-checks
 
-Same split applied to `q8.cpp`. 512x512, same prompt/seed:
+Same split applied to `q8.cpp`. Same prompt/seed, phased vs original:
 ```
-f9ad36bdc35fe3b434a05ca44a64a76ebbc3b661a2cc67329e62e87696396cc8  phased   73,931 ms
-f9ad36bdc35fe3b434a05ca44a64a76ebbc3b661a2cc67329e62e87696396cc8  original 82,173 ms
+512x512   f9ad36bdc35fe3b434a05ca44a64a76ebbc3b661a2cc67329e62e87696396cc8  phased  73,931 ms / orig  82,173 ms
+576x1024  8ee896d8db5b6714937539d552d5b18aefaa6f1a63bf8278fca1f79a7c652d1e  phased 179,457 ms / orig 184,493 ms  (GTT peak 14.3 GB vs 17.1 GB)
 ```
-Bit-identical, zero faults/resets, phased ~10% faster. (576x1024 / 1024x1024
-for Q8 are compile-clean, same split pattern, not yet runtime-tested.)
+Bit-identical at both sizes, zero faults/resets, phased ~3-10% faster. (Q8
+1024x1024 is compile-clean, same split pattern, not yet runtime-tested.)
 
 ### Speed
 Phased is faster at every size because lower sustained memory pressure means
