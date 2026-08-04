@@ -4,6 +4,12 @@ Goal: cut GPU memory by freeing the Qwen text-encoder weights after the context
 tensor is computed, before the DiT phase begins. On the iGPU this turns the
 long DiT phase from ~16 GB sustained into ~8-9 GB sustained.
 
+Two sources in this folder, both with the same graph-split applied:
+- `q5km.cpp` -> `zimage_q5km_780m` (Q5_K_M, mixed-quant async pipeline kept in
+  the DiT phase).
+- `q8.cpp`   -> `zimage_q8_780m`   (Q8_0; uniform quant, no async pipeline — the
+  split is the same but simpler, no `zq8_begin_async_pipeline_capture`).
+
 ## Status: working and bit-exact at all three sizes
 
 The graph-split is validated end-to-end. Same prompt/seed, phased
@@ -21,6 +27,16 @@ The graph-split is validated end-to-end. Same prompt/seed, phased
 
 Zero `[gfxhub] page fault`, zero `GPU reset begin` across all six runs
 (no use-after-free of the freed Qwen arena).
+
+### Q8_0 (zimage_q8_780m) — 512x512 spot-check
+
+Same split applied to `q8.cpp`. 512x512, same prompt/seed:
+```
+f9ad36bdc35fe3b434a05ca44a64a76ebbc3b661a2cc67329e62e87696396cc8  phased   73,931 ms
+f9ad36bdc35fe3b434a05ca44a64a76ebbc3b661a2cc67329e62e87696396cc8  original 82,173 ms
+```
+Bit-identical, zero faults/resets, phased ~10% faster. (576x1024 / 1024x1024
+for Q8 are compile-clean, same split pattern, not yet runtime-tested.)
 
 ### Speed
 Phased is faster at every size because lower sustained memory pressure means
