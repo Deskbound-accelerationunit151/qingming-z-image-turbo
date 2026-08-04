@@ -83,6 +83,36 @@ guard makes this double-free safe. The sampler/vae arenas are untouched.
 - GNOME must be stopped on the APU — its memory pressure causes amdgpu
   `init_user_pages: -1` floods and GPU resets. Drop to TTY first.
 
+## Why the GGUF is staged on /dev/shm
+
+The DiT weights (`--dit-gguf`) are mmap'd read-only (`PROT_READ, MAP_PRIVATE`,
+file-backed) by `MappedFile`. On this APU the GGUF must be staged on tmpfs
+(`/dev/shm`) rather than read from disk:
+
+1. **File-backed page-pin failures (EPERM).** On kernel 6.12 + `amd_iommu=on`,
+   amdgpu's `init_user_pages` intermittently returns `-EPERM` (-1) when pinning
+   file-backed (ext4) pages for GPU access. From ext4 this floods — hundreds to
+   thousands of `amdgpu: init_user_pages: Failed to get user pages: -1` — and
+   eventually leaves a NULL GPU mapping that the shader faults on
+   (`[gfxhub] page fault` at address 0x0) → MES wedge → MODE2 GPU reset.
+   tmpfs pages are shmem-backed (anonymous-like) and pin cleanly, so the flood
+   does not occur.
+2. **Driver state accumulates across resets.** Each GPU reset strands GTT
+   (observed ~16 GB unreclaimed after several resets), which then amplifies the
+   pin failures on later runs. A reboot is required to clear it. tmpfs + TTY +
+   a fresh boot is the reliable combo.
+
+Disk-path workarounds that were tried and do **not** work on this 30 GB box:
+- `PROT_READ|PROT_WRITE, MAP_PRIVATE` (give the VMA `VM_MAYWRITE`): suppresses
+  the EPERM but the write-pin path on file-backed pages leaves a NULL GPU
+  mapping → `[gfxhub] page fault` @0x0 → MES wedge.
+- `MAP_ANONYMOUS` + `read()` into a private buffer: pins cleanly but
+  double-buffers (page cache + anon copy) and OOMs the 30 GB box mid-load.
+
+Note: the `--model-dir` Qwen/VAE safetensors read fine straight from disk
+because they are read into host buffers and `hipMemcpy`'d — they are not pinned
+as a file-backed userptr the way the GGUF mmap is.
+
 ## Run
 
 ```bash
