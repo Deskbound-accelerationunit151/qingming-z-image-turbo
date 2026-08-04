@@ -30,21 +30,20 @@ PPM 转 JPG 示例 / PPM to JPG example:
 ffmpeg -y -i outputs/bf16_512x512.ppm -q:v 2 outputs/bf16_512x512.jpg
 ```
 
-
-| 模型 / Model | 分辨率 / Resolution | 图片 / Image |
-|---|---:|---|
-| BF16 | 512x512 | [outputs/bf16_512x512.jpg](outputs/bf16_512x512.jpg) |
-| BF16 | 576x1024 | [outputs/bf16_576x1024.jpg](outputs/bf16_576x1024.jpg) |
-| BF16 | 1024x1024 | [outputs/bf16_1024x1024.jpg](outputs/bf16_1024x1024.jpg) |
-| Q8_0 | 512x512 | [outputs/q8_512x512.jpg](outputs/q8_512x512.jpg) |
-| Q8_0 | 576x1024 | [outputs/q8_576x1024.jpg](outputs/q8_576x1024.jpg) |
-| Q8_0 | 1024x1024 | [outputs/q8_1024x1024.jpg](outputs/q8_1024x1024.jpg) |
-| Q6_K | 512x512 | [outputs/q6k_512x512.jpg](outputs/q6k_512x512.jpg) |
-| Q6_K | 576x1024 | [outputs/q6k_576x1024.jpg](outputs/q6k_576x1024.jpg) |
-| Q6_K | 1024x1024 | [outputs/q6k_1024x1024.jpg](outputs/q6k_1024x1024.jpg) |
-| Q5_K_M | 512x512 | [outputs/q5km_512x512.jpg](outputs/q5km_512x512.jpg) |
-| Q5_K_M | 576x1024 | [outputs/q5km_576x1024.jpg](outputs/q5km_576x1024.jpg) |
-| Q5_K_M | 1024x1024 | [outputs/q5km_1024x1024.jpg](outputs/q5km_1024x1024.jpg) |
+| 模型 / Model | 分辨率 / Resolution | 图片 / Image                                                                |
+| ---------- | ---------------: | ------------------------------------------------------------------------- |
+| BF16       |          512x512 | <img src="outputs/bf16_512x512.jpg" alt="BF16 512x512" width="240">       |
+| BF16       |         576x1024 | <img src="outputs/bf16_576x1024.jpg" alt="BF16 576x1024" width="180">     |
+| BF16       |        1024x1024 | <img src="outputs/bf16_1024x1024.jpg" alt="BF16 1024x1024" width="240">   |
+| Q8_0       |          512x512 | <img src="outputs/q8_512x512.jpg" alt="Q8_0 512x512" width="240">         |
+| Q8_0       |         576x1024 | <img src="outputs/q8_576x1024.jpg" alt="Q8_0 576x1024" width="180">       |
+| Q8_0       |        1024x1024 | <img src="outputs/q8_1024x1024.jpg" alt="Q8_0 1024x1024" width="240">     |
+| Q6_K       |          512x512 | <img src="outputs/q6k_512x512.jpg" alt="Q6_K 512x512" width="240">        |
+| Q6_K       |         576x1024 | <img src="outputs/q6k_576x1024.jpg" alt="Q6_K 576x1024" width="180">      |
+| Q6_K       |        1024x1024 | <img src="outputs/q6k_1024x1024.jpg" alt="Q6_K 1024x1024" width="240">    |
+| Q5_K_M     |          512x512 | <img src="outputs/q5km_512x512.jpg" alt="Q5_K_M 512x512" width="240">     |
+| Q5_K_M     |         576x1024 | <img src="outputs/q5km_576x1024.jpg" alt="Q5_K_M 576x1024" width="180">   |
+| Q5_K_M     |        1024x1024 | <img src="outputs/q5km_1024x1024.jpg" alt="Q5_K_M 1024x1024" width="240"> |
 
 ### 2.2 性能矩阵 / Performance Matrix
 
