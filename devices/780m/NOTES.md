@@ -28,15 +28,17 @@ The graph-split is validated end-to-end. Same prompt/seed, phased
 Zero `[gfxhub] page fault`, zero `GPU reset begin` across all six runs
 (no use-after-free of the freed Qwen arena).
 
-### Q8_0 (zimage_q8_780m) — spot-checks
+### Q8_0 (zimage_q8_780m) — validated bit-exact at all three sizes
 
 Same split applied to `q8.cpp`. Same prompt/seed, phased vs original:
 ```
 512x512   f9ad36bdc35fe3b434a05ca44a64a76ebbc3b661a2cc67329e62e87696396cc8  phased  73,931 ms / orig  82,173 ms
 576x1024  8ee896d8db5b6714937539d552d5b18aefaa6f1a63bf8278fca1f79a7c652d1e  phased 179,457 ms / orig 184,493 ms  (GTT peak 14.3 GB vs 17.1 GB)
+1024x1024 da76bf77286309ce48f9cd36d36621241311db0d1be3ceab38420fea3a638377  phased 347,419 ms / orig 352,420 ms  (GTT peak ~17.4 GB both)
 ```
-Bit-identical at both sizes, zero faults/resets, phased ~3-10% faster. (Q8
-1024x1024 is compile-clean, same split pattern, not yet runtime-tested.)
+Bit-identical at every size, zero `[gfxhub] page fault` / zero `GPU reset begin`
+across all six runs. Phased is faster at every size (−10% / −3% / −1.4%; the
+margin shrinks at larger sizes since the DiT compute dominates).
 
 ### Speed
 Phased is faster at every size because lower sustained memory pressure means
